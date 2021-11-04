@@ -161,9 +161,9 @@ class MedicinesSearch:
                         logger.error(
                             f"Medicine with id {m} raised a TimeoutException. Iteration number {index} will be skipped."
                         )
-                        continue
+                        continue                  
             except Exception as err:
-                logger.error(err)
+                logger.error("Un error inesperado ha ocurrido:", err)
                 meds_ids_filename = "meds_ids.txt"
                 with open(meds_ids_filename, "w") as out:
                     out.write("\n".join(meds_ids))
