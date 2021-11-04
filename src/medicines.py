@@ -1,8 +1,8 @@
 import re
 import logging
 from time import sleep
-from typing import List
 from bs4 import BeautifulSoup
+from selenium.common.exceptions import TimeoutException
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -142,18 +142,34 @@ class MedicinesSearch:
             logger.info(f"Scraping {num_medicines} medicines by scrolling method...")
             self.scroll_down_until(num_medicines)
             meds_ids = self.get_medicines_identifiers()
-            # Retrieve the numeric part of the identifiers
-            meds_id_numbers = []
-            for m in meds_ids:
-                num_registro = re.search("\d+", m).group(0)
-                meds_id_numbers.append(num_registro)
-            logger.info(f"Retrieved all {len(meds_ids)} medicines identifiers")
-            for index,m in enumerate(meds_id_numbers):
-                med_data = self.scrape_medicine_by_id_number(m)
-                data.append(med_data)
-                # Only scrape until the defined number of medicines
-                if index > num_medicines:
-                    break
+            try:
+                # Retrieve the numeric part of the identifiers
+                meds_id_numbers = []
+                for m in meds_ids:
+                    num_registro = re.search("\d+", m).group(0)
+                    meds_id_numbers.append(num_registro)
+                logger.info(f"Retrieved all {len(meds_ids)} medicines identifiers")
+                for index, m in enumerate(meds_id_numbers):
+                    logger.info(f"Iteration number {index}...")
+                    try:
+                        med_data = self.scrape_medicine_by_id_number(m)
+                        data.append(med_data)
+                        # Only scrape until reach the defined number of medicines
+                        if len(data) >= num_medicines:
+                            break                        
+                    except TimeoutException:
+                        logger.error(
+                            f"Medicine with id {m} raised a TimeoutException. Iteration number {index} will be skipped."
+                        )
+                        continue
+            except Exception as err:
+                logger.error(err)
+                meds_ids_filename = "meds_ids.txt"
+                with open(meds_ids_filename, "w") as out:
+                    out.write("\n".join(meds_ids))
+                logger.info(
+                    f"Saved medicines identifiers into {meds_ids_filename} file."
+                )
         logger.info(f"Scraped a total of {len(data)} medicines")
         return data
 
@@ -231,7 +247,5 @@ class MedicinesSearch:
             # Por motivos informativos, imprimimos cuantas iteraciones/scrollings llevamos
             n_iters += 1
             if n_meds % 100 == 0:
-                logger.info(
-                    f"Found {n_meds} elements (in {n_iters} iterations)..."
-                )
+                logger.info(f"Found {n_meds} elements (in {n_iters} iterations)...")
 

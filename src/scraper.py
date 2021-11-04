@@ -31,8 +31,8 @@ def initialize_driver() -> webdriver:
 def main():
     driver = initialize_driver()
     cima_webpage = Cima(driver, _DEFAULT_SLEEP_TIME, _DEFAULT_TIMEOUT)
-    medicines_data = cima_webpage.search_medicines(search="*").scrape_medicines(
-        num_medicines=50
+    medicines_data = cima_webpage.search_medicines(search="*", sleep_time=0.5).scrape_medicines(
+        num_medicines=5000
     )
     medicines_table = pd.DataFrame.from_records(
         medicines_data, index="Número de registro"
