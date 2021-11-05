@@ -121,13 +121,13 @@ class MedicinesSearch:
 
     def scrape_medicines(self, num_medicines: int = None) -> list:
         data = []
-        if not num_medicines or num_medicines < 25:
+        if not num_medicines:
             # No need of scrolling, only first 25 elements will be scraped
             meds_ids = self.get_medicines_identifiers()
             # Recorremos las ids de todos los medicamentos representado a cada uno por 'm'
             logger.info(f"Retrieved all {len(meds_ids)} medicines identifiers")
             logger.info(
-                f"Scraping {num_medicines} medicines by click and back method..."
+                f"Scraping {len(meds_ids)} medicines by click and back method..."
             )
             for m in meds_ids:
                 med_data = self.scrape_medicine_click_and_back(m)
