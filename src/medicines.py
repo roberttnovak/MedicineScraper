@@ -119,7 +119,7 @@ class MedicinesSearch:
         self._timeout = timeout
         self._wait = WebDriverWait(driver, self._timeout)
 
-    def scrape_medicines(self, num_medicines: int = None) -> list:
+    def scrape_medicines(self, num_medicines: int = None, scroll_sleep_time: float = None) -> list:
         data = []
         if not num_medicines:
             # No need of scrolling, only first 25 elements will be scraped
@@ -140,7 +140,7 @@ class MedicinesSearch:
                     self._driver.find_element(By.ID, "numResultados").text
                 )
             logger.info(f"Scraping {num_medicines} medicines by scrolling method...")
-            self.scroll_down_until(num_medicines)
+            self.scroll_down_until(num_medicines, scroll_sleep_time or self._sleep_time)
             meds_ids = self.get_medicines_identifiers()
             try:
                 # Retrieve the numeric part of the identifiers
@@ -162,7 +162,7 @@ class MedicinesSearch:
                             f"Medicine with id {m} raised a TimeoutException. Iteration number {index} will be skipped."
                         )
                         continue                  
-            except Exception as err:
+            except BaseException as err:
                 logger.error("Un error inesperado ha ocurrido:", err)
                 meds_ids_filename = "meds_ids.txt"
                 with open(meds_ids_filename, "w") as out:
@@ -221,7 +221,7 @@ class MedicinesSearch:
 
         return nueva_fila
 
-    def scroll_down_until(self, max_elements: int):
+    def scroll_down_until(self, max_elements: int, sleep_time: float):
         n_iters = 0
         n_meds = 0
         while n_meds < max_elements:
@@ -234,7 +234,7 @@ class MedicinesSearch:
             self._driver.execute_script(
                 "window.scrollTo(0, document.body.scrollHeight);"
             )
-            sleep(self._sleep_time)
+            sleep(sleep_time)
             # Esperar hasta que el último elemento de la lista sea clicable
             self._wait.until(
                 EC.element_to_be_clickable(

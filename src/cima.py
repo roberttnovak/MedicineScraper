@@ -22,9 +22,7 @@ class Cima:
     def get_home(self):
         self._driver.get("https://cima.aemps.es/cima/publico/home.html")
 
-    def search_medicines(
-        self, search: str, sleep_time: float = None, timeout: float = None
-    ):
+    def search_medicines(self, search: str):
         self.get_home()
         logger.debug(f"Finding {search} ...")
         buscador = self._driver.find_element(By.ID, "inputbuscadorsimple")
@@ -40,7 +38,5 @@ class Cima:
         num_elements = int(self._driver.find_element(By.ID, "numResultados").text)
         logger.info(f"Found {num_elements} elements for search '{search}'")
         return MedicinesSearch(
-            self._driver,
-            sleep_time=sleep_time or self._sleep_time,
-            timeout=timeout or self._timeout,
+            self._driver, sleep_time=self._sleep_time, timeout=self._timeout,
         )

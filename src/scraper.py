@@ -90,9 +90,9 @@ def main():
     )
     driver = initialize_driver()
     cima_webpage = Cima(driver, args.sleep_time, args.timeout)
-    medicines_data = cima_webpage.search_medicines(
-        search="*", sleep_time=args.scroll_sleep_time
-    ).scrape_medicines(num_medicines=args.num_medicamentos)
+    medicines_data = cima_webpage.search_medicines(search="*").scrape_medicines(
+        num_medicines=args.num_medicamentos, scroll_sleep_time=args.scroll_sleep_time
+    )
     medicines_table = pd.DataFrame.from_records(
         medicines_data, index="Número de registro"
     )
