@@ -2,7 +2,7 @@ import re
 import logging
 from time import sleep
 from bs4 import BeautifulSoup
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -119,7 +119,9 @@ class MedicinesSearch:
         self._timeout = timeout
         self._wait = WebDriverWait(driver, self._timeout)
 
-    def scrape_medicines(self, num_medicines: int = None, scroll_sleep_time: float = None) -> list:
+    def scrape_medicines(
+        self, num_medicines: int = None, scroll_sleep_time: float = None
+    ) -> list:
         data = []
         if not num_medicines:
             # No need of scrolling, only first 25 elements will be scraped
@@ -150,20 +152,21 @@ class MedicinesSearch:
                     meds_id_numbers.append(num_registro)
                 logger.info(f"Retrieved all {len(meds_ids)} medicines identifiers")
                 for index, m in enumerate(meds_id_numbers):
-                    logger.info(f"Iteration number {index}...")
                     try:
                         med_data = self.scrape_medicine_by_id_number(m)
+                        logger.info(f"Iteración nº {index} - Id medicamento: {m} - Título de página actual: '{self._driver.title}'")
                         data.append(med_data)
                         # Only scrape until reach the defined number of medicines
                         if len(data) >= num_medicines:
-                            break                        
-                    except TimeoutException:
+                            break
+                    except Exception as err:
                         logger.error(
-                            f"Medicine with id {m} raised a TimeoutException. Iteration number {index} will be skipped."
+                            f"Iteración nº {index} - Id medicamento: {m} - Título de página actual: '{self._driver.title}'.\n"
+                            f"Detalles del error:\n'{err}'"
                         )
-                        continue                  
+                        continue
             except BaseException as err:
-                logger.error("Un error inesperado ha ocurrido:", err)
+                logger.error(f"Un error inesperado ha ocurrido: {err}")
                 meds_ids_filename = "meds_ids.txt"
                 with open(meds_ids_filename, "w") as out:
                     out.write("\n".join(meds_ids))
@@ -205,16 +208,26 @@ class MedicinesSearch:
         return nueva_fila
 
     def scrape_medicine_by_id_number(self, med_id_number: int):
-        self._driver.get(
-            "https://cima.aemps.es/cima/publico/detalle.html?nregistro={}".format(
-                med_id_number
-            )
+        url = "https://cima.aemps.es/cima/publico/detalle.html?nregistro={}".format(
+            med_id_number
         )
-
+        self._driver.get(url)
         # Esperamos hasta que se termine de cargar el contenido del html donde se
         # encuentran todos los datos de interés del medicamento
-        self._wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "figure")))
-        logger.info(f"Navigated to '{self._driver.title}'")
+        try:
+            # Espera a que cargue el botón de compartir
+            self._wait.until(
+                EC.visibility_of_element_located(
+                    (By.CSS_SELECTOR, "button[onclick='compartirMedicamento()'")
+                )
+            )
+        except TimeoutException:
+            logger.warning(
+                f"El medicamento con id {med_id_number} ha provocado un TimeoutException. "
+                 "Se procederá a recargar la página y esperar un tiempo por defecto."
+            )
+            self._driver.get(url)
+            sleep(self._sleep_time)
 
         # Accedemos al código fuente de la página una vez que esté se ha terminado de rellenar
         nueva_fila = MedicineDetails(html=self._driver.page_source).scrape_data()
