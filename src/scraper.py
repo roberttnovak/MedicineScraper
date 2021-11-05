@@ -88,16 +88,20 @@ def main():
         format="%(asctime)s [%(levelname)s] -- %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
-    driver = initialize_driver()
-    cima_webpage = Cima(driver, args.sleep_time, args.timeout)
-    medicines_data = cima_webpage.search_medicines(search="*").scrape_medicines(
-        num_medicines=args.num_medicamentos, scroll_sleep_time=args.scroll_sleep_time
-    )
-    medicines_table = pd.DataFrame.from_records(
-        medicines_data, index="Número de registro"
-    )
-    medicines_table.to_csv(args.out, index=True)
-    logger.info(f"Saved data into {args.out}")
+    try:
+        driver = initialize_driver()
+        cima_webpage = Cima(driver, args.sleep_time, args.timeout)
+        medicines_data = cima_webpage.search_medicines(search="*").scrape_medicines(
+            num_medicines=args.num_medicamentos,
+            scroll_sleep_time=args.scroll_sleep_time,
+        )
+        medicines_table = pd.DataFrame.from_records(
+            medicines_data, index="Número de registro"
+        )
+        medicines_table.to_csv(args.out, index=True)
+        logger.info(f"Saved data into {args.out}")
+    finally:
+        driver.quit()
 
 
 if __name__ == "__main__":
