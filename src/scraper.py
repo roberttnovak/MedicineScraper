@@ -21,6 +21,13 @@ def parser_args():
     )
 
     parser.add_argument(
+        "--search",
+        type=str,
+        default="*",
+        help="Búsqueda por medicamento o principio activo a realizar en la página web.\
+            Por defecto estará a '*', de forma que buscará todos los medicamentos disponibles",
+    )
+    parser.add_argument(
         "--num-medicamentos",
         type=int,
         default=None,
@@ -57,10 +64,25 @@ def parser_args():
     parser.add_argument(
         "-v",
         "--verbose",
-        default=False,
         action="store_true",
+        default=False,
         help="Activar para mostrar mensajes de debugging (Verbose logging).",
     )
+    parser.add_argument(
+        "--remove-default-filters",
+        action="store_true",
+        default=False,
+        help="Desactiva todos los filtros de búsqueda por defecto.",
+    )
+
+    filters_group = parser.add_argument_group("Filtros disponibles")
+    for k, v in Cima._FILTROS_BUSQUEDA.items():
+        filters_group.add_argument(
+            "--" + k,
+            action="store_true",
+            default=False,
+            help="Indica si seleccionar el " + v,
+        )
 
     return parser.parse_args()
 
@@ -81,6 +103,22 @@ def initialize_driver() -> webdriver:
     return driver
 
 
+def select_items(data: dict, keys_to_select: list):
+    items = {}
+    for key, value in data.items():
+        if key in keys_to_select:
+            items[key] = value
+    return items
+
+
+def filterout_false_values(data: dict):
+    filtered_data = {}
+    for key, value in data.items():
+        if value is True:
+            filtered_data[key] = value
+    return filtered_data
+
+
 def main():
     args = parser_args()
     logging.basicConfig(
@@ -91,7 +129,15 @@ def main():
     try:
         driver = initialize_driver()
         cima_webpage = Cima(driver, args.sleep_time, args.timeout)
-        medicines_data = cima_webpage.search_medicines(search="*").scrape_medicines(
+        search_filters = select_items(
+            data=vars(args), keys_to_select=Cima._FILTROS_BUSQUEDA.keys()
+        )
+        search = cima_webpage.search_medicines(
+            search=args.search,
+            remove_default_filters=args.remove_default_filters,
+            search_filters=list(filterout_false_values(search_filters).keys()),
+        )
+        medicines_data = search.scrape_medicines(
             num_medicines=args.num_medicamentos,
             scroll_sleep_time=args.scroll_sleep_time,
         )

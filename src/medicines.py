@@ -2,8 +2,8 @@ import re
 import logging
 from time import sleep
 from bs4 import BeautifulSoup
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -119,9 +119,7 @@ class MedicinesSearch:
         self._timeout = timeout
         self._wait = WebDriverWait(driver, self._timeout)
 
-    def scrape_medicines(
-        self, num_medicines: int = None, scroll_sleep_time: float = None
-    ) -> list:
+    def scrape_medicines(self, num_medicines: int, scroll_sleep_time: float) -> list:
         data = []
         if not num_medicines:
             # No need of scrolling, only first 25 elements will be scraped
@@ -154,7 +152,9 @@ class MedicinesSearch:
                 for index, m in enumerate(meds_id_numbers):
                     try:
                         med_data = self.scrape_medicine_by_id_number(m)
-                        logger.info(f"Iteración nº {index} - Id medicamento: {m} - Título de página actual: '{self._driver.title}'")
+                        logger.info(
+                            f"Iteración nº {index} - Id medicamento: {m} - Título de página actual: '{self._driver.title}'"
+                        )
                         data.append(med_data)
                         # Only scrape until reach the defined number of medicines
                         if len(data) >= num_medicines:
@@ -224,7 +224,7 @@ class MedicinesSearch:
         except TimeoutException:
             logger.warning(
                 f"El medicamento con id {med_id_number} ha provocado un TimeoutException. "
-                 "Se procederá a recargar la página y esperar un tiempo por defecto."
+                "Se procederá a recargar la página y esperar un tiempo por defecto."
             )
             self._driver.get(url)
             sleep(self._sleep_time)
@@ -261,4 +261,3 @@ class MedicinesSearch:
             n_iters += 1
             if n_meds % 100 == 0:
                 logger.info(f"Found {n_meds} elements (in {n_iters} iterations)...")
-
