@@ -1,8 +1,16 @@
 # MedicineScraper
-Scraping de dataset de medicamentos registrados por el gobierno de España a partir de la página https://cima.aemps.es/.
+Web scraping de medicamentos registrados por el gobierno de España a partir de la página https://cima.aemps.es/. Este proyecto se ha realizado como práctica para la asignatura de "Tipología y Ciclo de Vida de los Datos" de la Universitat Oberta de Catalunya (UOC) - curso 2021/2022. 
+
+## Autores
+El proyecto se ha realizado de manera conjunta entre [Geovanny Risco](https://github.com/geovalexis) y [Robert Novak](https://github.com/roberttnovak). 
+
+## Estructura del repositorio
+* **notebooks/medicine_scraper.ipynb**: notebook utilizado como entorno de pruebas para la implementación del proyecto. Contiene también información detallada sobre los principales problemas que nos encontramos y las diferentes soluciones propuestas. Todo el código de la carpeta `/src` se ha elaborado a partir del código en este notebook. 
+* **src/scraper.py**: módulo principal de ejecución del programa. Controla los inputs de entrada y utiliza el resto de módulos para iniciar el proceso de scraping.
+* **scr/cima.py**: módulo que contiene las funciones relacionadas con la búsqueda de medicamentos en la página web de Cima. 
+* **src/medicines.py**: módulo que contiene toda la lógica principal del proyecto: obtención del listado de medicamentos, obtención del html, parse de datos, etc.
 
 ## Instalación
-
 Es necesario tener instalado una versión estable de google chrome ya que el scraper utilizará el motor y los drivers de google chrome para su ejecución. No es necesario instalar manualmente los drivers de google chrome, esto se realizará de forma interna (si es necesario). 
 
 Las dependencias de python se encuentran en el archivo `requirements.txt` y se puede instalar utilizando el siguiente comando:
@@ -15,16 +23,28 @@ pip install -r requirements.txt
 Se puede lanzar una búsqueda simple de la siguiente manera:
 
 ```bash
-python src/scraper.py --search "paracetamol" --out tabla_medicamentos.csv
+python src/scraper.py --search "paracetamol" --out medicamentos.csv
 ```
 
 Para obtener un número determinado de medicamentos:
 
 ```bash
-python src/scraper.py --num-medicamentos 1000 --out tabla_medicamentos.csv
+python src/scraper.py --num-medicamentos 1000 --out medicamentos.csv
+# Por defecto buscará "*", lo cual es intepretado por la web como "cualquiera" o "todos".
 ```
 
-## Lista completa de parámetros
+## Datasets
+
+Se ha obtenido un dataset de todos los medicamentos disponibles en la página web mediante el siguiente comando:
+```bash
+python src/scraper.py --num-medicamentos -1 --remove-default-filters  --out medicamentos-cima-all.csv
+# "--num-medicamentos -1" indica que el nº de medicamentos sea el total encontrado en la búsqueda
+# "--remove-default-filters" desactiva todos los filtros activados por defecto
+```
+El dataset se encuentra públicamente accesible mediante el siguiente enlace de Zenodo: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5651781.svg)](https://doi.org/10.5281/zenodo.5651781)
+
+
+## Listado completa de parámetros
 ```bash
 usage: scraper.py [-h] [--search SEARCH] [--num-medicamentos NUM_MEDICAMENTOS] --out OUT [--sleep-time SLEEP_TIME]
                   [--scroll-sleep-time SCROLL_SLEEP_TIME] [--timeout TIMEOUT] [-v] [--remove-default-filters]
@@ -53,7 +73,7 @@ optional arguments:
   --remove-default-filters
                         Desactiva todos los filtros de búsqueda por defecto.
 
-Filtros disponibles:
+filtros disponibles:
   --filtroRecetaSi      Indica si seleccionar el filtro de los medicamentos con receta
   --filtroRecetaNo      Indica si seleccionar el filtro de los medicamentes sin receta
   --filtroTrianguloSi   Indica si seleccionar el filtro de los medicamentos con seguimiento adicional
@@ -83,3 +103,7 @@ Se puede consultar este listado en cualquier momento utilizando el siguiente com
 ```bash
 python src/scraper.py --help
 ```
+
+## Recursos
+* Material docente de la asignatura.
+* Documentación oficial de [Selenium](https://www.selenium.dev/documentation/#htmlunit-driver) y [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/).

@@ -75,7 +75,7 @@ def parser_args():
         help="Desactiva todos los filtros de búsqueda por defecto.",
     )
 
-    filters_group = parser.add_argument_group("Filtros disponibles")
+    filters_group = parser.add_argument_group("filtros disponibles")
     for k, v in Cima._FILTROS_BUSQUEDA.items():
         filters_group.add_argument(
             "--" + k,
