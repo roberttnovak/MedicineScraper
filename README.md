@@ -107,3 +107,8 @@ python src/scraper.py --help
 ## Recursos
 * Material docente de la asignatura.
 * Documentación oficial de [Selenium](https://www.selenium.dev/documentation/#htmlunit-driver) y [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/).
+
+## TODOs
+* Unificar funciones de seleccionar y deseleccionar filtros
+* Añadir más columnas: imágenes, datos de pop-ups, etc.
+* Extraer datos de los PDFs

@@ -145,7 +145,7 @@ def main():
             medicines_data, index="Número de registro"
         )
         medicines_table.to_csv(args.out, index=True)
-        logger.info(f"Saved data into {args.out}")
+        logger.info(f"Datos guardados en {args.out}")
     finally:
         driver.quit()
 

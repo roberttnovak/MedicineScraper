@@ -53,7 +53,6 @@ class Cima:
         buscador.clear()
         buscador.send_keys(search)
         buscador.send_keys(Keys.ENTER)
-        # If we do not wait, the `page_source` will not have time to change and it will be showed the previous page (the homepage in this case)
         sleep(self._sleep_time)
         self._wait.until(
             EC.presence_of_all_elements_located((By.XPATH, "//*[@id='resultlist']/div"))

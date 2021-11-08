@@ -122,20 +122,20 @@ class MedicinesSearch:
     def scrape_medicines(self, num_medicines: int, scroll_sleep_time: float) -> list:
         data = []
         if not num_medicines:
-            # No need of scrolling, only first 25 elements will be scraped
+            # No hace falta hacer scroll, se hace scraping de los 25 elementos presentes 
             meds_ids = self.get_medicines_identifiers()
             # Recorremos las ids de todos los medicamentos representado a cada uno por 'm'
-            logger.info(f"Retrieved all {len(meds_ids)} medicines identifiers")
+            logger.info(f"Obtenido todos los {len(meds_ids)} identificadores de medicamentos")
             logger.info(
-                f"Scraping {len(meds_ids)} medicines by click and back method..."
+                f"Scraping {len(meds_ids)} medicamentos por método de click y atrás..."
             )
             for m in meds_ids:
                 med_data = self.scrape_medicine_click_and_back(m)
                 data.append(med_data)
         else:
-            # We have to scroll down the page
+            # Hace falta hacer scroll por la pagina
             if num_medicines == -1:
-                # All medicines available will be scraped
+                # \Todos los medicamentos disponibles serán scrapeados
                 num_medicines = int(
                     self._driver.find_element(By.ID, "numResultados").text
                 )
@@ -143,7 +143,7 @@ class MedicinesSearch:
             self.scroll_down_until(num_medicines, scroll_sleep_time or self._sleep_time)
             meds_ids = self.get_medicines_identifiers()
             try:
-                # Retrieve the numeric part of the identifiers
+                # Obtenemos la parte numerica del identificador
                 meds_id_numbers = []
                 for m in meds_ids:
                     num_registro = re.search("\d+", m).group(0)
@@ -156,7 +156,7 @@ class MedicinesSearch:
                             f"Iteración nº {index} - Id medicamento: {m} - Título de página actual: '{self._driver.title}'"
                         )
                         data.append(med_data)
-                        # Only scrape until reach the defined number of medicines
+                        # Si se llega al nº de medicamentos especificados se para la ejecución
                         if len(data) >= num_medicines:
                             break
                     except Exception as err:
@@ -171,9 +171,9 @@ class MedicinesSearch:
                 with open(meds_ids_filename, "w") as out:
                     out.write("\n".join(meds_ids))
                 logger.info(
-                    f"Saved medicines identifiers into {meds_ids_filename} file."
+                    f"Se han guardado los identificadores en el archivo {meds_ids_filename}."
                 )
-        logger.info(f"Scraped a total of {len(data)} medicines")
+        logger.info(f"Obtenido un total de {len(data)} medicamentos")
         return data
 
     def get_medicines_identifiers(self):
@@ -195,7 +195,7 @@ class MedicinesSearch:
 
         # Esperamos hasta que se termine de cargar el contenido del html donde se encuentran todos los datos de interés del medicamento
         self._wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "figure")))
-        logger.info(f"Navigated to {self._driver.title}.")
+        logger.info(f"Accedido a {self._driver.title}.")
 
         # Accedemos al código fuente de la página una vez que esté se ha terminado de rellenar
         nueva_fila = MedicineDetails(html=self._driver.page_source).scrape_data()
@@ -203,7 +203,7 @@ class MedicinesSearch:
         # Se vuelve atrás esperando a que la página cargue para seguir haciendo el mismo proceso para los demás medicamentos
         self._driver.back()
         self._driver.implicitly_wait(self._timeout)
-        logger.info(f"Navigated back to {self._driver.title}.")
+        logger.info(f"Vuelto para atrás {self._driver.title}.")
 
         return nueva_fila
 
