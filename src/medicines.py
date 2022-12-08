@@ -90,6 +90,14 @@ class MedicineDetails:
         codigos_atc = bs.find("div", {"id": "atcList"}).find_all("li")
         codigos_atc = [atc.get_text() for atc in codigos_atc]
 
+        formatos = bs.find("div", {"id": "bodyFormatos"}).find_all("div", recursive=False) or []
+        formatos_parsed = []
+        for fmt in formatos:
+            title, cn = fmt.find_all("h6")
+            title = title.get_text()
+            cn = cn.get_text().strip(" National code: ").strip()
+            formatos_parsed.append({"Titulo": title, "Codigo Nacional": cn})
+
         # Se guardan todos los elementos extraídos anteriormente en una nueva fila cuyo índice en el DataFrame será el número de registro
         nueva_fila = {
             "Número de registro": num_registro,
@@ -107,6 +115,7 @@ class MedicineDetails:
             "Excipientes": excipientes,
             "Características": caracteristicas,
             "Códigos ATC": codigos_atc,
+            "Formatos": formatos_parsed,
         }
 
         return nueva_fila
