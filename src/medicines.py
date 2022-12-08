@@ -1,13 +1,13 @@
-import re
 import logging
+import re
 from time import sleep
-from bs4 import BeautifulSoup
 
+from bs4 import BeautifulSoup
+from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +90,14 @@ class MedicineDetails:
         codigos_atc = bs.find("div", {"id": "atcList"}).find_all("li")
         codigos_atc = [atc.get_text() for atc in codigos_atc]
 
+        formatos = bs.find("div", {"id": "bodyFormatos"}).find_all("div", recursive=False) or []
+        formatos_parsed = []
+        for fmt in formatos:
+            title, cn = fmt.find_all("h6")
+            title = title.get_text()
+            cn = cn.get_text().strip(" National code: ").strip()
+            formatos_parsed.append({"Titulo": title, "Codigo Nacional": cn})
+
         # Se guardan todos los elementos extraídos anteriormente en una nueva fila cuyo índice en el DataFrame será el número de registro
         nueva_fila = {
             "Número de registro": num_registro,
@@ -107,6 +115,7 @@ class MedicineDetails:
             "Excipientes": excipientes,
             "Características": caracteristicas,
             "Códigos ATC": codigos_atc,
+            "Formatos": formatos_parsed,
         }
 
         return nueva_fila
@@ -118,14 +127,23 @@ class MedicinesSearch:
         self._sleep_time = sleep_time
         self._timeout = timeout
         self._wait = WebDriverWait(driver, self._timeout)
+        
+    def wait_for_page_to_load(self):
+        self._wait.until(
+            EC.visibility_of_element_located(
+                (By.CSS_SELECTOR, "button[onclick='compartirMedicamento()'")
+            )
+        )        
 
     def scrape_medicines(self, num_medicines: int, scroll_sleep_time: float) -> list:
         data = []
         if not num_medicines:
-            # No hace falta hacer scroll, se hace scraping de los 25 elementos presentes 
+            # No hace falta hacer scroll, se hace scraping de los 25 elementos presentes
             meds_ids = self.get_medicines_identifiers()
             # Recorremos las ids de todos los medicamentos representado a cada uno por 'm'
-            logger.info(f"Obtenido todos los {len(meds_ids)} identificadores de medicamentos")
+            logger.info(
+                f"Obtenido todos los {len(meds_ids)} identificadores de medicamentos"
+            )
             logger.info(
                 f"Scraping {len(meds_ids)} medicamentos por método de click y atrás..."
             )
@@ -194,7 +212,7 @@ class MedicinesSearch:
         ).click()
 
         # Esperamos hasta que se termine de cargar el contenido del html donde se encuentran todos los datos de interés del medicamento
-        self._wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "figure")))
+        self.wait_for_page_to_load()
         logger.info(f"Accedido a {self._driver.title}.")
 
         # Accedemos al código fuente de la página una vez que esté se ha terminado de rellenar
@@ -216,11 +234,7 @@ class MedicinesSearch:
         # encuentran todos los datos de interés del medicamento
         try:
             # Espera a que cargue el botón de compartir
-            self._wait.until(
-                EC.visibility_of_element_located(
-                    (By.CSS_SELECTOR, "button[onclick='compartirMedicamento()'")
-                )
-            )
+            self.wait_for_page_to_load()
         except TimeoutException:
             logger.warning(
                 f"El medicamento con id {med_id_number} ha provocado un TimeoutException. "
